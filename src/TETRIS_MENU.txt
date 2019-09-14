@@ -1,0 +1,139 @@
+/*David Katz
+ *June 15, 2018
+ *Mr.Benum
+ *This program is supposed to start the menu and then proceed to the other classes which either record the score or play the game
+ */
+//libraries i imported so that I could have resources for my program to work
+import java.awt.Color; 
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Timer;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+//this is so I don't get annoying warnings recommending that I should serialize my program because i made it become a JPanel
+@SuppressWarnings("serial")
+public class TETRIS_MENU extends JFrame implements ActionListener 
+{
+	//Two other classes I made to run the game itself and to manage the recording and storing of the high scores
+	public Highscore h = new Highscore();
+	public Tetris t = new Tetris();
+	//boolean to decide if the game is over or not
+	public static boolean gameOver=false;
+	//font I made which the JLabels use
+	private static Font f = new Font("Times New Roman", Font.PLAIN, 20);
+	//initialized variables for the buttons
+	final static JButton START =  new JButton("START");
+	final static JButton HIGH_SCORES =  new JButton("HIGH SCORES");
+	final static JButton RULES =  new JButton("RULES");
+	private JButton EXIT = new JButton("EXIT");
+	//adds a timer for the iterations of my game
+	final static Timer timer = new Timer();
+	//initializes and names the frames corresponding to each section of the game
+	final static JFrame MENU_FRAME = new JFrame("Slav Tetris Menu");
+	final static JFrame GAME_FRAME = new JFrame("Slav Tetris");
+	final static JFrame RULES_FRAME = new JFrame("Slav Tetris Rules");
+	final static JFrame LOSE = new JFrame("YOU LOSE!");
+	final static JFrame HIGHSCORE = new JFrame("Slav Tetris High Scores");
+	public TETRIS_MENU() 
+	{
+		//logo's image is set to a JLabel to be drawn
+		MENU_FRAME.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);//Let's the Java program close when [x] is pressed
+		MENU_FRAME.setLayout(null);//makes the window not have a default layout so we can place the buttons by coordinates
+		MENU_FRAME.setSize(780,440);//the size of how many pixels the window will have (length by width)
+		MENU_FRAME.setResizable(false);//makes the window size permanent
+		MENU_FRAME.setContentPane(new JLabel(new ImageIcon("img/TETRIS_BACKGROUND.png")));//makes the background the image i selected		
+		START.setFont(new Font("Impact", Font.PLAIN, 40));//the type of font and the font size of the button
+		START.setForeground(Color.BLUE);// the coloring of the words displayed in the button
+		START.setBounds(550,200,200,100);//location of the start button(x,y,length,height)
+		MENU_FRAME.add(START);//the instructions for the JFrame to add the button
+		EXIT.setFont(new Font("Impact", Font.PLAIN, 20));//the type of font and the font size of the button
+		EXIT.setForeground(Color.RED);// the coloring of the words displayed in the button
+		EXIT.setBounds(600,350,150,50);//location of the start button(x,y,length,height)
+		MENU_FRAME.add(EXIT);//the instructions for the JFrame to add the button
+		HIGH_SCORES.setFont(new Font("Impact", Font.PLAIN, 20));//the type of font and the font size of the button
+		HIGH_SCORES.setForeground(Color.BLUE);// the coloring of the words displayed in the button
+		HIGH_SCORES.setBounds(20,350,150,50);//location of the start button(x,y,length,height)
+		MENU_FRAME.add(HIGH_SCORES);//the instructions for the JFrame to add the button
+		RULES.setFont(new Font("Impact", Font.PLAIN, 40));//the type of font and the font size of the button
+		RULES.setForeground(Color.BLUE);// the coloring of the words displayed in the button
+		RULES.setBounds(20,200,200,100);//location of the start button(x,y,length,height)
+		MENU_FRAME.add(RULES);//the instructions for the JFrame to add the button
+		MENU_FRAME.setVisible(true);//makes the JFRAME visible
+		//allows buttons to use ActionListener
+		START.addActionListener(this);
+		EXIT.addActionListener(this);
+		RULES.addActionListener(this);
+		HIGH_SCORES.addActionListener(this);
+	}
+	/**
+	 * DESC:The game over sequence
+	 * PRE: gets called on by the Tetris class when the user has lost
+	 * POST: writes the names and scores of high scores to the high scores text file
+	 */
+	public static void GameOver()
+	{
+		Highscore h = new Highscore(); //creates a new score keeper
+		if (Tetris.score > h.getScore()[4]) { //if the score is higher than the score board's lowest
+			h.setScore(Tetris.score); //add the score to the score board
+		}
+		h.displayScores(); //display the score board
+	}
+	/**
+	 * DESC:starts the menu
+	 * PRE: user opening the program
+	 * POST:opens the menu
+	 */
+	public static void main(String args[]) 
+	{
+		new TETRIS_MENU();
+	}
+	/**
+	 * DESC:initializes classes or JFrames depending on the button being pressed
+	 * PRE: buttons being pressed
+	 * POST:opens the specific class or JFrame upon the button pressed
+	 */
+	public void actionPerformed( ActionEvent e) 
+	{
+		if (e.getSource() == START) 
+		{
+			MENU_FRAME.setVisible(false);
+			t.init();
+		}
+		else if (e.getSource() == RULES) 
+		{
+			RULES_FRAME.setSize(700,400);
+			RULES_FRAME.setLayout(null);
+			RULES_FRAME.setResizable(false);
+			final JLabel RLS = new JLabel();//title of the  label which displays when x wins
+			RLS.setBounds(0, 0, 700, 400);//location of the first label(x,y,length,height)
+			RLS.setText("<HTML>Welcome to Slav Tetris!"
+					+ "<BR>How to play:"
+					+ "<BR>-Tetrominos will continuously drop down onto your screen make a row to delete the spaces"
+					+ "<BR>-\"LEFT\"or \"RIGHT\" key to move your tetromino left or right\n-\"UP\"key rotates your tetromino"
+					+ "<BR>-\"DOWN\" key moves your tetromino lower at a faster speed"
+					+ "<BR>-\"SPACE\" key drops your tetromino down to the lowest point"
+					+ "<BR>-\"You are allowed one pause during the game by pressing ESC, you can resume by pressing R"
+					+ "<BR>-\"If you try to pause or resume again the game will speed up!"
+					+ "<BR>-When your tetrominos reach the top you lose!!!!!</HTML>");//what the rules will say
+			RLS.setFont(f);//the type of font and the font size of the label
+			RLS.setOpaque(true);
+			RLS.setBackground(Color.BLACK);// the coloring of the words displayed in the label
+			RLS.setForeground(Color.MAGENTA);// the coloring of the words displayed in the label
+			RULES_FRAME.add(RLS);//the instructions for the JFrame to add the JLabel
+			RLS.setVisible(true);//instruction so that the Label will appear as soon as the program is activated
+			RULES_FRAME.setVisible(true);
+		} 
+		else if (e.getSource() == HIGH_SCORES) 
+		{
+			h.displayScores(); // opens high scores pop up
+		} 
+		else if (e.getSource() == EXIT) 
+		{
+			System.exit(0);
+		
+		}
+	}
+}

@@ -1,0 +1,451 @@
+/*David Katz
+ *June 15, 2018
+ *Mr.Benum
+ *This program is supposed to play the game Tetris 
+ */
+//libraries i imported so that I could have resources for my program to work
+import java.awt.Color;//A library we need to import to make our program work
+import javax.swing.JButton;//A library we need to import to make our program work
+import javax.swing.JFrame;//A library we need to import to make our program work
+import javax.swing.JLabel;//A library we need to import to make our program work
+import java.awt.Graphics;
+import java.awt.Point;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Timer;
+import java.util.TimerTask;
+import javax.swing.JPanel;
+//this is so I don't get annoying warnings recommending that I should serialize my program because i made it become a JPanel
+@SuppressWarnings("serial") 
+public class Tetris extends JPanel //means this class is a JPanel
+{
+	//initialized variables for the buttons
+	final static JButton START =  new JButton("START");
+	//adds a timer for the iterations of my game
+	final static Timer TIMER = new Timer();
+	//initializes and names the frames corresponding to each section of the game
+	final static JFrame GAME_FRAME = new JFrame("Slav Tetris");
+	final static JFrame LOSE = new JFrame("YOU LOSE!");
+	//title of the  label which display when the user has lost or the rules
+	final JLabel YLS = new JLabel();
+	//integers for the rotation, number position of the shape, the score
+	private static int rotation;
+	private static int currentTetromino;
+	public static int score;
+	//the point where the tetrominos start dropping from
+	private Point tetrominoStartPoint;
+	//a list of the 6 tetrominos which will be used to determine which one drops next
+	private ArrayList<Integer> nextTetromino = new ArrayList<Integer>();
+	//a 2D array for the colors of my map
+	private static Color[][] wallColor;
+	//array of the color values to cycle through the different colors so that the next shape doesn't have the same color as the previous one	
+	final Color[] tetraminoColors =
+		{
+				Color.ORANGE, Color.BLUE, Color.MAGENTA, Color.YELLOW, Color.GREEN, Color.WHITE, Color.CYAN
+		};
+	//this is to determine if the tetromino will have to stop moving or can continue going down or left/right
+	private boolean loseChecker() 
+	{
+		//if there is a collision at the top row then the user has lost the game otherwise return false
+		if(collisionAt(5,4, rotation)==true||collisionAt(4,4, rotation)==true||collisionAt(6,4, rotation)==true||collisionAt(7,4, rotation)==true)
+		{
+			lose();
+			return true;
+		}
+		return false;
+	}
+	//this is to determine if the tetromino will have to stop moving or can continue going down or left/right	
+	private static  boolean collisionAt(int x, int y, int rotations) 
+	{
+		for (Point p:tetraminos[currentTetromino][rotations]) 
+		{
+			//if the wall color where the Tetromino will go isn't black returns true otherwise return false
+			if (wallColor[p.x + x][p.y + y] != Color.BLACK) 
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+	//coordinates for all the shapes that will drop down in the game
+	private final static Point[][][] tetraminos = 
+		{
+				//3D array which maps out every possible position my tetrominos can using points on a plane (plotting points on a grid)
+				{
+					// J Shaped Piece coordinates in a plane
+					{ new Point(0, 1), new Point(1, 1), new Point(2, 1), new Point(2, 0) },
+					{ new Point(1, 0), new Point(1, 1), new Point(1, 2), new Point(2, 2) },
+					{ new Point(0, 1), new Point(1, 1), new Point(2, 1), new Point(0, 2) },
+					{ new Point(1, 0), new Point(1, 1), new Point(1, 2), new Point(0, 0) }
+				},
+				{
+					// L ShapedPiece coordinates in a plane
+					{ new Point(0, 1), new Point(1, 1), new Point(2, 1), new Point(2, 2) },
+					{ new Point(1, 0), new Point(1, 1), new Point(1, 2), new Point(0, 2) },
+					{ new Point(0, 1), new Point(1, 1), new Point(2, 1), new Point(0, 0) },
+					{ new Point(1, 0), new Point(1, 1), new Point(1, 2), new Point(2, 0) }
+				},
+
+				{
+					// Z ShapedPiece coordinates in a plane
+					{ new Point(0, 0), new Point(1, 0), new Point(1, 1), new Point(2, 1) },
+					{ new Point(1, 0), new Point(0, 1), new Point(1, 1), new Point(0, 2) },
+					{ new Point(0, 0), new Point(1, 0), new Point(1, 1), new Point(2, 1) },
+					{ new Point(1, 0), new Point(0, 1), new Point(1, 1), new Point(0, 2) }
+				},
+
+
+				{
+					// S Shaped Piece coordinates in a plane
+					{ new Point(1, 0), new Point(2, 0), new Point(0, 1), new Point(1, 1) },
+					{ new Point(0, 0), new Point(0, 1), new Point(1, 1), new Point(1, 2) },
+					{ new Point(1, 0), new Point(2, 0), new Point(0, 1), new Point(1, 1) },
+					{ new Point(0, 0), new Point(0, 1), new Point(1, 1), new Point(1, 2) }
+				},
+				{
+					// T Shaped Piece coordinates in a plane
+					{ new Point(1, 0), new Point(0, 1), new Point(1, 1), new Point(2, 1) },
+					{ new Point(1, 0), new Point(0, 1), new Point(1, 1), new Point(1, 2) },
+					{ new Point(0, 1), new Point(1, 1), new Point(2, 1), new Point(1, 2) },
+					{ new Point(1, 0), new Point(1, 1), new Point(2, 1), new Point(1, 2) }
+				},
+				{
+					// O Shaped Piece coordinates in a plane
+					{ new Point(0, 0), new Point(0, 1), new Point(1, 0), new Point(1, 1) },
+					{ new Point(0, 0), new Point(0, 1), new Point(1, 0), new Point(1, 1) },
+					{ new Point(0, 0), new Point(0, 1), new Point(1, 0), new Point(1, 1) },
+					{ new Point(0, 0), new Point(0, 1), new Point(1, 0), new Point(1, 1) }
+				},
+				{
+					// I Shaped Piece coordinates in a plane
+					{ new Point(0, 1), new Point(1, 1), new Point(2, 1), new Point(3, 1) },
+					{ new Point(1, 0), new Point(1, 1), new Point(1, 2), new Point(1, 3) },
+					{ new Point(0, 1), new Point(1, 1), new Point(2, 1), new Point(3, 1) },
+					{ new Point(1, 0), new Point(1, 1), new Point(1, 2), new Point(1, 3) }
+				},
+		};
+	/**
+	 * DESC:Makes the frame and starts the game
+	 * PRE:Gets called on by the start button
+	 * POST:makes the game and adds the key listeners
+	 */
+	public void init()
+	{
+		GAME_FRAME.setSize(12*26+10, 26*23+25);//sets the size of the frame
+		GAME_FRAME.setVisible(true);//enables to user to be able to see the frame on their screen
+		GAME_FRAME.setResizable(false);//makes the game size permanent
+		GAME_FRAME.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);//Let's the Java program close when x is pressed
+		final Tetris game = new Tetris();//names a subclass game
+		game.start();//runs the initialization sequence for the game
+		GAME_FRAME.add(game);//adds the game to the main frame
+		final TimerTask myTask = new TimerTask() 
+		{
+			@Override
+			public void run() 
+			{
+				game.dropDown();//makes the drop have a 1 second pause
+
+			}
+		};TIMER.schedule(myTask, 0, 1000);					
+		GAME_FRAME.addKeyListener(new KeyListener()//adds a key listener 
+				{
+			public void keyTyped(KeyEvent e) 
+			{	
+			}//no action when any other key is typed
+			public void keyReleased(KeyEvent e) 
+			{
+			}//no action when any other key is released
+			public void keyPressed(KeyEvent e) 
+			{
+				switch (e.getKeyCode()) 
+				{
+				case KeyEvent.VK_UP:
+					game.rotate(-1);
+					break;//when the up key is pressed the blocks rotate counterclockwise
+				case KeyEvent.VK_DOWN:
+					game.dropDown();
+					Tetris.score ++;
+					break;//when the down key is pressed it speeds up the speed the block travels and adds a point
+				case KeyEvent.VK_LEFT:
+					game.translate(-1);
+					break;
+				case KeyEvent.VK_RIGHT:
+					game.translate(+1);
+					break;
+				case KeyEvent.VK_SPACE:
+					game.dropDownHard();
+					Tetris.score+=20;//when the space key is pressed it speeds up the speed the block speed and adds a point
+					break;
+				case KeyEvent.VK_ESCAPE:
+					TIMER.cancel();//when the escape key is pressed it pauses the game once
+					break;
+
+				case KeyEvent.VK_R:
+					game.resume();//when the R key is pressed it resumes the game or speeds it up if the player pushes it a lot
+					break;
+				}
+			}
+				});
+	}
+	/**
+	 * DESC: paints the colors of the map
+	 * PRE:gets called on by "init();"
+	 * POST: paints the color of the walls and starts dropping a peice
+	 */	
+	public void start() 
+	{
+		//makes a 2D array (grid) with dimensions 12x24 by using embedded for loops making sure the outer edge is red while the inside is black (setting the boundaries)
+		wallColor = new Color[12][24];
+		for (int x = 0; x < 12; x++) 
+		{
+			for (int y = 0; y < 23; y++) 
+			{
+				if (x == 0 || x == 11 || y == 22) 
+				{
+					wallColor[x][y] = Color.RED;
+				}//paints the outer edges red
+				else 
+				{
+					wallColor[x][y] = Color.BLACK;
+				}//paints everything else black
+			}
+		}
+		//starts dropping the first piece as soon as the wall is created
+		newTetromino();
+	}
+	/**
+	 * DESC: uses the graphics library to set the color of the score and map
+	 * PRE:none
+	 * POST: initializes the color of the walls and the score text
+	 */	
+	public void paintComponent(Graphics g)
+	{
+		//paints the wall with the given colors
+		g.fillRect(0, 0, 26*12, 26*23);
+		for (int x = 0; x < 12; x++)
+		{
+			for (int y = 0; y < 23; y++) 
+			{
+				g.setColor(wallColor[x][y]);
+				g.fillRect(26*x, 26*y, 25, 25);
+			}
+		}
+		//sets the color of the score text
+		g.setColor(Color.CYAN);
+		// Display the score at the given points
+		g.drawString("" + score, 19*12, 25);
+		// Draws the current falling piece
+		drawTheGame(g);
+	}
+	/**
+	 * DESC:uses the graphics library to set the color for the tetromino at its current location
+	 * PRE:none
+	 * POST:sends the piece out onto the board and gives it its color
+	 */	
+	private void drawTheGame(Graphics g) 
+	{		
+		g.setColor(tetraminoColors[currentTetromino]);//sets the color for the tetromino
+		//sets the color of the shape at the point where it is
+		for (Point p : tetraminos[currentTetromino][rotation]) 
+		{
+			g.fillRect((p.x + tetrominoStartPoint.x) * 26, (p.y + tetrominoStartPoint.y) * 26,25, 25);
+		}
+	}
+	/**
+	 * DESC:makes the starting point (5,0) with rotations set at 0 and adds and shuffles the pieces
+	 * PRE:Gets called on by start();
+	 * POST:Creates the order of tetrominos and shuffles it, and starts dropping the piece
+	 */	
+	private void newTetromino() 
+	{
+		tetrominoStartPoint = new Point(5,0);//the piece starts dropping at  coordinates 5,0 
+		rotation = 0;//the rotation starts at 0 since the piece has just dropped and no rotations have been implemented
+		//adds all the tetrominos and shuffles the order in which they appear on the map using java.util.collections (a preset way to work with numbers)
+		if (nextTetromino.isEmpty()) 
+		{
+			Collections.addAll(nextTetromino, 0, 1, 2, 3, 4, 5, 6);
+			Collections.shuffle(nextTetromino);
+		}
+		currentTetromino = nextTetromino.get(0);//makes the current piece the first piece in the order a.k.a "0"
+		nextTetromino.remove(0);//removes the first possible piece from the order so that it won't repeat twice in a row
+		loseChecker();//checks if the user has lost their game
+	}
+	/**
+	 * DESC:Checks for collisions before rotating the piece
+	 * PRE:Gets called on by the user pressing the up arrow key
+	 * POST:Rotates the tetromino if there is no collision and repaints it
+	 */	
+	private void rotate(int r) 
+	{
+		int newRotation = (rotation + r) % 4;
+		//sets the rotation value to a new value
+		if (newRotation < 0) 
+		{
+			newRotation = 3;
+		}
+		//sets the rotation value to a new one if there is no collision
+		if (!collisionAt(tetrominoStartPoint.x, tetrominoStartPoint.y, newRotation)) 
+		{
+			rotation = newRotation;
+		}
+		repaint();//repaints the new squares with the color of the tetromino
+	}
+	/**
+	 * DESC:Checks for collisions before horizontally moving the the piece
+	 * PRE:Gets called on by the user pressing the left or right arrow keys
+	 * POST:Translates the tetromino left of right if there if no collision with the area getting repainted
+	 */	
+	private void translate(int g) 
+	{
+		//moves the shape either left or right if there are no collision in the new potential spots
+		if (!collisionAt(tetrominoStartPoint.x + g, tetrominoStartPoint.y, rotation)) 
+		{
+			tetrominoStartPoint.x+=g;
+		}
+		repaint();//repaints the new square where the shape is
+	}
+	/**
+	 * DESC:Checks for collisions before vertically moving the the piece
+	 * PRE:Gets called on by the user pressing the down arrow key
+	 * POST:Translates the tetromino down and repaints the area
+	 */	
+	private void dropDown() 
+	{
+		//if there is no collision at the next layer it drops the peice by one row
+		if (!collisionAt(tetrominoStartPoint.x, tetrominoStartPoint.y + 1, rotation))
+		{
+			tetrominoStartPoint.y+=1;
+		}
+		else 
+		{
+			//makes the piece stop moving and be part of the bottom row
+			stickToWall();
+		}	
+		repaint();//repaints the new squares with the color of the tetromino
+	}
+	/**
+	 * DESC:Checks for collisions before vertically moving the the piece
+	 * PRE:Gets called on by the user pressing the down arrow key
+	 * POST:Translates the tetromino all the way down and repaints the area
+	 */	
+	private void dropDownHard() 
+	{
+		//drops the piece down by one as long as there is no collision
+		while(!collisionAt(tetrominoStartPoint.x, tetrominoStartPoint.y+1, rotation))//if there is no collision at the next layer !!!!!!!FOR LOSING!!!!!!
+		{
+			tetrominoStartPoint.y++;
+		}
+		stickToWall();//makes the piece stop moving and be part of the bottom row
+		repaint();//repaints the new squares with the color of the tetromino
+	}
+	/**
+	 * DESC:repaints the row to the original background color
+	 * PRE:to be called on by clearRows();
+	 * POST:turns the space to a black/red color again by "deleting the row"
+	 */	
+	private void deleteRow(int row) 
+	{
+		//repaints the specific row the original background color
+		for (int j = row-1; j > 0; j--) 
+		{
+			for (int i = 1; i < 11; i++) 
+			{
+				wallColor[i][j+1] = wallColor[i][j];
+			}
+		}
+	}
+	/**
+	 * DESC:deletes the rows
+	 * PRE:for there to be a gap in at least one row
+	 * POST:deletes all the rows without any gaps (if multiple exist)
+	 */	
+	private void clearRows() 
+	{
+		boolean gap;
+		int numClears = 0;
+		for (int j = 21; j > 0; j--) 
+		{
+			//checks for a gap in the row by checking the color of every square along every row less than the row where a loss is checked (row25-4=row21)
+			gap = false;
+			for (int i = 1; i < 11; i++) 
+			{
+				if (wallColor[i][j] == Color.BLACK) 
+				{
+					gap = true;
+					break;
+				}
+			}
+			//deletes the row and adds a number to how many rows have been deleted
+			if (!gap) 
+			{
+				deleteRow(j);
+				j += 1;
+				numClears += 1;
+			}
+		}
+		//cases for how many points are awarded for however many rows are deleted
+		switch (numClears) 
+		{
+		case 1:
+			score += 100;
+			break;
+		case 2:
+			score += 200;
+			break;
+		case 3:
+			score += 400;
+			break;
+		case 4:
+			score += 800;
+			break;
+		}
+	}
+	/**
+	 * DESC:Checks if the piece can still move in any direction
+	 * PRE:none
+	 * POST:makes the piece immovable if there are collisions in every direction 
+	 */	
+	private void stickToWall() 
+	{
+		//if the piece cannot move anymore it is fixed in place
+		for (Point p : tetraminos[currentTetromino][rotation]) 
+		{
+			wallColor[tetrominoStartPoint.x + p.x][tetrominoStartPoint.y + p.y] = tetraminoColors[currentTetromino];
+		}
+		clearRows();//clears the row
+		newTetromino();//sends in a new piece
+	}
+	/**
+	 * DESC:Lets the user know they lost
+	 * PRE:gets called on by the loseChecker boolean
+	 * POST:closes the game and displays the "you lost" JLABEL
+	 */	
+	private void lose()
+	{
+		TIMER.cancel();//stop the dropping of the piece
+		GAME_FRAME.setVisible(false);//makes the game disappear
+		TETRIS_MENU.GameOver();		
+	}
+	/**
+	 * DESC:Resumes the game after a pause
+	 * PRE:gets called on by the user pressing the R button
+	 * POST:restars the timer and resumes dropping the piece
+	 */	
+	private void resume()
+	{
+		//creates the timer again to resume the game
+		Timer timer = new Timer();
+		final TimerTask myTask = new TimerTask() 
+		{
+			@Override
+			public void run() 
+			{
+				dropDown();//makes the drop have a 1 second pause
+
+			}
+		};timer.schedule(myTask, 0, 1000);	
+	}
+	//I don't need a main method because I access this class through my menu class
+}
